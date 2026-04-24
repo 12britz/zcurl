@@ -1,0 +1,35 @@
+{
+  "name": "zcurl",
+  "version": "1.0.0",
+  "description": "A beautifully colored curl alternative — see your HTTP requests and responses with style",
+  "type": "module",
+  "main": "src/index.js",
+  "bin": {
+    "zcurl": "src/index.js"
+  },
+  "files": [
+    "src"
+  ],
+  "keywords": [
+    "curl",
+    "http",
+    "cli",
+    "api",
+    "rest",
+    "request",
+    "color",
+    "terminal",
+    "pretty-print",
+    "httpie"
+  ],
+  "author": "",
+  "license": "MIT",
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "dependencies": {
+    "chalk": "^5.3.0",
+    "node-fetch": "^3.3.2",
+    "cli-table3": "^0.6.5"
+  }
+}
