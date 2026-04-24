@@ -3,61 +3,60 @@ import chalk from "chalk";
 const B = { tl: "┌", tr: "┐", bl: "└", br: "┘", h: "─", v: "│", lt: "├", rt: "┤", x: "┼" };
 const P = chalk.cyan, S = chalk.green, W = chalk.white, D = chalk.dim, Bc = chalk.blue, Y = chalk.yellow, R = chalk.red, M = chalk.magenta;
 
+const WIDTH = 56;
+
 export function formatRequest(req) {
   let out = "";
-  const w = 56;
-  out += D(B.tl + B.h.repeat(w) + B.tr) + "\n";
-  out += D(B.v) + "  " + P.bold("REQUEST") + "\n";
-  out += D(B.v) + "  " + methodColor(req.method) + W(req.url) + "\n";
-  out += D(B.lt + B.h.repeat(w) + B.rt) + "\n";
+  out += D(B.tl + B.h.repeat(WIDTH) + B.tr) + "\n";
+  out += D(B.v) + "  " + P.bold("REQUEST") + D(" ").repeat(WIDTH - 12) + D(B.v) + "\n";
+  out += D(B.v) + "  " + methodColor(req.method) + W(req.url) + D(" ").repeat(Math.max(0, WIDTH - 12 - req.url.length)) + D(B.v) + "\n";
+  out += D(B.lt + B.h.repeat(WIDTH) + B.rt) + "\n";
 
   const hdrs = req.headers || {};
   const hkeys = Object.keys(hdrs);
   if (hkeys.length) {
-    out += sectionBox("Headers", w);
-    for (const k of hkeys) out += contentRow(k, hdrs[k], w);
+    out += sectionBox("Headers", WIDTH);
+    for (const k of hkeys) out += contentRow(k, hdrs[k], WIDTH);
   }
 
   if (req.body) {
-    out += sectionBox("Body", w);
+    out += sectionBox("Body", WIDTH);
     const b = formatBody(req.body, hdrs["Content-Type"]);
-    for (const l of b.split("\n").slice(0, 20)) out += contentRow("", l, w);
+    for (const l of b.split("\n").slice(0, 20)) out += contentRow("", l, WIDTH);
   }
 
-  out += D(B.bl + B.h.repeat(w) + B.br) + "\n";
+  out += D(B.bl + B.h.repeat(WIDTH) + B.br) + "\n";
   return out;
 }
 
 export function formatResponse(res) {
   let out = "";
-  const w = 56;
-  out += D(B.tl + B.h.repeat(w) + B.tr) + "\n";
-  out += D(B.v) + "  " + P.bold("RESPONSE") + "\n";
-  out += D(B.v) + "  " + statusColor(res.status) + W(" " + res.statusText) + "\n";
-  out += D(B.lt + B.h.repeat(w) + B.rt) + "\n";
+  out += D(B.tl + B.h.repeat(WIDTH) + B.tr) + "\n";
+  out += D(B.v) + "  " + P.bold("RESPONSE") + D(" ").repeat(WIDTH - 11) + D(B.v) + "\n";
+  out += D(B.v) + "  " + statusColor(res.status) + W(" " + res.statusText) + D(" ").repeat(Math.max(0, WIDTH - 14 - String(res.status).length)) + D(B.v) + "\n";
+  out += D(B.lt + B.h.repeat(WIDTH) + B.rt) + "\n";
 
-  out += sectionBox("Headers", w);
+  out += sectionBox("Headers", WIDTH);
   const hdrs = res.headers || {};
-  for (const k of Object.keys(hdrs)) out += contentRow(k, hdrs[k], w);
+  for (const k of Object.keys(hdrs)) out += contentRow(k, hdrs[k], WIDTH);
 
   if (res.body) {
-    out += sectionBox("Body", w);
+    out += sectionBox("Body", WIDTH);
     const b = formatBody(res.body, hdrs["content-type"]);
-    for (const l of b.split("\n").slice(0, 20)) out += contentRow("", l, w);
+    for (const l of b.split("\n").slice(0, 20)) out += contentRow("", l, WIDTH);
   }
 
-  out += contentRow("Size", formatBytes(Buffer.byteLength(res.body || "", "utf-8")), w);
-  out += D(B.bl + B.h.repeat(w) + B.br) + "\n";
+  out += contentRow("Size", formatBytes(Buffer.byteLength(res.body || "", "utf-8")), WIDTH);
+  out += D(B.bl + B.h.repeat(WIDTH) + B.br) + "\n";
   return out;
 }
 
 export function formatTiming(timing) {
   if (!timing) return "";
   let out = "";
-  const w = 56;
-  out += D(B.tl + B.h.repeat(w) + B.tr) + "\n";
-  out += D(B.v) + "  " + P.bold("TIMING") + "\n";
-  out += D(B.lt + B.h.repeat(w) + B.rt) + "\n";
+  out += D(B.tl + B.h.repeat(WIDTH) + B.tr) + "\n";
+  out += D(B.v) + "  " + P.bold("TIMING") + D(" ").repeat(WIDTH - 10) + D(B.v) + "\n";
+  out += D(B.lt + B.h.repeat(WIDTH) + B.rt) + "\n";
 
   const phases = [["DNS Lookup", timing.dns], ["TCP Connect", timing.tcp], ["TLS Handshake", timing.tls], ["First Byte (TTFB)", timing.ttfb], ["Content Download", timing.download], ["Total", timing.total]];
   const maxT = Math.max(...phases.map(([, v]) => v || 0), 0.001);
@@ -68,22 +67,29 @@ export function formatTiming(timing) {
     const barW = Math.max(1, Math.round((ms / maxT) * bw));
     const bar = "▓".repeat(barW) + "░".repeat(bw - barW);
     const col = ms / timing.total > 0.5 ? R : ms / timing.total > 0.25 ? Y : S;
-    out += D(B.v) + " " + D(lbl.padEnd(20)) + col(bar) + " " + W(ms.toFixed(0) + " ms") + "\n";
+    const row = D(B.v) + " " + D(lbl.padEnd(20)) + col(bar) + " " + W(ms.toFixed(0) + " ms");
+    out += row + D(" ").repeat(Math.max(0, WIDTH - row.length + 1)) + D(B.v) + "\n";
   }
 
-  out += D(B.bl + B.h.repeat(w) + B.br) + "\n\n";
+  out += D(B.bl + B.h.repeat(WIDTH) + B.br) + "\n\n";
   return out;
 }
 
 function sectionBox(title, w) {
-  return D(B.lt + B.h.repeat(w) + B.rt) + "\n" + D(B.v) + " " + P.bold(title) + "\n";
+  return D(B.lt + B.h.repeat(w) + B.rt) + "\n" + 
+         D(B.v) + " " + P.bold(title) + D(" ").repeat(w - title.length - 2) + D(B.v) + "\n";
 }
 
 function contentRow(k, v, w) {
-  const line = k 
-    ? D(B.v) + " " + P(k.slice(0,20).padEnd(20)) + W("│ " + String(v).slice(0, 33))
-    : D(B.v) + " " + W(String(v).slice(0, w - 3));
-  return line + "\n";
+  if (k) {
+    const content = P(k.slice(0,20).padEnd(20)) + " " + W(String(v).slice(0, 31));
+    const line = D(B.v) + " " + content + D(" ").repeat(Math.max(0, w - 3 - content.length)) + D(B.v);
+    return line + "\n";
+  } else {
+    const content = W(String(v).slice(0, w - 3));
+    const line = D(B.v) + " " + content + D(" ").repeat(Math.max(0, w - 3 - content.length)) + D(B.v);
+    return line + "\n";
+  }
 }
 
 function methodColor(m) {
