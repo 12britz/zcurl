@@ -1,6 +1,6 @@
-# 🔥 zcurl - A beautifully colored curl alternative for your terminal
+# 🔥 Just add a "Z" to curl and see magic!
 
-I've been working on this for a while and finally got it published. It's a curl alternative with stunning box-style output that makes API testing actually enjoyable.
+I've been working on this for a while and finally got it published. It's a curl alternative with stunning box-style output that makes API testing actually enjoyable. Just add a "Z" to curl and see the magic!
 
 ## Why zcurl?
 
@@ -82,3 +82,5 @@ zcurl --replay 5  # replay entry #5
 - **GitHub:** https://github.com/12britz/zcurl
 
 Would love to hear what you think! Issues and PRs welcome. 🚀
+
+Just add a "Z" to curl and see the magic!
