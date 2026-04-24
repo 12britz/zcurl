@@ -2,6 +2,10 @@
 
 A beautifully colored curl alternative — see your HTTP requests and responses with style.
 
+
+<img width="525" height="330" alt="image" src="https://github.com/user-attachments/assets/b6f63207-03c3-493c-ae24-7c0b1350b75a" />
+
+
 ## Features
 
 - Colored output for requests and responses
