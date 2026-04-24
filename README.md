@@ -29,6 +29,7 @@ npx zcurl <url>
 ```
 
 ---
+<img width="960" height="1088" alt="zcurl" src="https://github.com/user-attachments/assets/d32599be-1b57-45f6-a95a-87cbc57e956a" />
 
 ## Quick Start
 
