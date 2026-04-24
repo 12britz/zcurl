@@ -5,24 +5,35 @@ const P = chalk.cyan, W = chalk.white, D = chalk.dim;
 
 export function showBanner() {
   const logo = `
-  ███████╗███████╗██╗  ██╗   ██╗
-  ╚══███╔╝██╔════╝██║  ╚██╗ ██╔╝
-    ███╔╝ █████╗  ██║   ╚████╔╝
-   ███╔╝  ██╔══╝  ██║    ╚██╔╝
-  ███████╗███████╗███████╗██║
-  ╚══════╝╚══════╝╚══════╝╚═╝`;
+  ███████╗ ██████╗██╗   ██╗██████╗ ██╗     
+  ╚══███╔╝██╔════╝██║   ██║██╔══██╗██║     
+    ███╔╝ ██║     ██║   ██║██████╔╝██║     
+   ███╔╝  ██║     ██║   ██║██╔══██╗██║     
+  ███████╗╚██████╗╚██████╔╝██║  ██║███████╗
+  ╚══════╝ ╚═════╝ ╚═════╝ ╚═╝  ╚═╝╚══════╝`;
 
-  const lines = logo.split("\n").filter((l) => l.trim());
-  const w = 54;
+  const lines = logo.split("\n").filter((l) => l.trim().length > 0);
+  const w = 62;
 
   console.log();
   console.log(D(B.tl + B.h.repeat(w) + B.tr));
+  
+  const maxLineLen = Math.max(...lines.map(l => l.length));
+  const leftPad = Math.floor((w - maxLineLen) / 2);
+  
   for (const line of lines) {
-    console.log(D(B.v) + " ".repeat(w / 2 - 4) + P(line) + " ".repeat(w / 2 + 2) + D(B.v));
+    const plainLine = " ".repeat(leftPad) + line;
+    const padRight = Math.max(0, w - plainLine.length);
+    console.log(D(B.v) + P(plainLine) + " ".repeat(padRight) + D(B.v));
   }
+  
   console.log(D(B.v + " ".repeat(w) + B.v));
 
-  console.log(D(B.v) + " ".repeat(8) + P.bold("zcurl") + W("  a beautifully colored curl alternative") + " ".repeat(w - 36) + D(B.v));
+  const titleLeft = " ".repeat(10);
+  const titleText = titleLeft + "zcurl  a beautifully colored curl alternative";
+  const titlePad = Math.max(0, w - titleText.length);
+  console.log(D(B.v) + titleLeft + P.bold("zcurl") + W("  a beautifully colored curl alternative") + " ".repeat(titlePad) + D(B.v));
+  
   console.log(D(B.bl + B.h.repeat(w) + B.br));
   console.log();
 
@@ -37,7 +48,10 @@ export function showBanner() {
 
   console.log(D(B.tl + B.h.repeat(w) + B.tr));
   for (const [cmd, desc] of commands) {
-    console.log(D(B.v) + "  " + P(cmd.padEnd(36)) + D(desc.padEnd(w - 38)) + D(B.v));
+    const leftStr = "  " + cmd.padEnd(36);
+    const plain = leftStr + desc;
+    const padRight = Math.max(0, w - plain.length);
+    console.log(D(B.v) + "  " + P(cmd.padEnd(36)) + D(desc) + " ".repeat(padRight) + D(B.v));
   }
   console.log(D(B.bl + B.h.repeat(w) + B.br));
   console.log(D(" ── Run ") + P("zcurl --help") + D(" for all options ──"));
