@@ -1,5 +1,8 @@
 import chalk from "chalk";
 
+const B = { tl: "┌", tr: "┐", bl: "└", br: "┘", h: "─", v: "│" };
+const P = chalk.cyan, W = chalk.white, D = chalk.dim;
+
 export function showBanner() {
   const logo = `
   ███████╗███████╗██╗  ██╗   ██╗
@@ -10,17 +13,17 @@ export function showBanner() {
   ╚══════╝╚══════╝╚══════╝╚═╝`;
 
   const lines = logo.split("\n").filter((l) => l.trim());
+  const w = 54;
 
   console.log();
+  console.log(D(B.tl + B.h.repeat(w) + B.tr));
   for (const line of lines) {
-    console.log(chalk.cyan(line));
+    console.log(D(B.v) + " ".repeat(w / 2 - 4) + P(line) + " ".repeat(w / 2 + 2) + D(B.v));
   }
+  console.log(D(B.v + " ".repeat(w) + B.v));
 
-  console.log();
-  console.log(
-    chalk.bold.white("  zcurl"),
-    chalk.dim(" — a beautifully colored curl alternative")
-  );
+  console.log(D(B.v) + " ".repeat(8) + P.bold("zcurl") + W("  a beautifully colored curl alternative") + " ".repeat(w - 36) + D(B.v));
+  console.log(D(B.bl + B.h.repeat(w) + B.br));
   console.log();
 
   const commands = [
@@ -32,15 +35,11 @@ export function showBanner() {
     ["zcurl --history", "Show request history"],
   ];
 
+  console.log(D(B.tl + B.h.repeat(w) + B.tr));
   for (const [cmd, desc] of commands) {
-    console.log(
-      chalk.white("  ❯"),
-      chalk.cyan(cmd.padEnd(40)),
-      chalk.dim(desc)
-    );
+    console.log(D(B.v) + "  " + P(cmd.padEnd(36)) + D(desc.padEnd(w - 38)) + D(B.v));
   }
-
-  console.log();
-  console.log(chalk.dim("  Run"), chalk.cyan("zcurl --help"), chalk.dim("for all options"));
+  console.log(D(B.bl + B.h.repeat(w) + B.br));
+  console.log(D(" ── Run ") + P("zcurl --help") + D(" for all options ──"));
   console.log();
 }
