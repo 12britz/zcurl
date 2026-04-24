@@ -5,7 +5,7 @@ import { parseArgs } from "./args.js";
 import { showBanner } from "./banner.js";
 import { makeRequest } from "./client.js";
 import { formatRequest, formatResponse, formatTiming, computeWidth } from "./formatter.js";
-import { loadHistory, saveToHistory, showHistory } from "./history.js";
+import { loadHistory, saveToHistory, showHistory, getHistoryEntry } from "./history.js";
 
 const args = process.argv.slice(2);
 
@@ -17,21 +17,39 @@ if (args.length === 0) {
 const parsed = parseArgs(args);
 
 if (parsed.history) {
-  showHistory();
+  if (parsed.historyNum) {
+    const entry = getHistoryEntry(parsed.historyNum);
+    if (entry) {
+      showHistory(parsed.historyNum);
+    } else {
+      console.log(chalk.red(`History entry #${parsed.historyNum} not found.`));
+    }
+  } else {
+    showHistory();
+  }
   process.exit(0);
 }
 
 if (parsed.replay) {
-  const history = loadHistory();
-  const last = history[history.length - 1];
-  if (!last) {
-    console.log(chalk.red("No previous requests found in history."));
-    process.exit(1);
+  let entry;
+  if (parsed.replayNum) {
+    entry = getHistoryEntry(parsed.replayNum);
+    if (!entry) {
+      console.log(chalk.red(`History entry #${parsed.replayNum} not found.`));
+      process.exit(1);
+    }
+  } else {
+    const history = loadHistory();
+    entry = history[history.length - 1];
+    if (!entry) {
+      console.log(chalk.red("No previous requests found in history."));
+      process.exit(1);
+    }
   }
-  parsed.method = last.method || "GET";
-  parsed.url = last.url;
-  parsed.headers = last.headers || {};
-  parsed.data = last.body || null;
+  parsed.method = entry.method || "GET";
+  parsed.url = entry.url;
+  parsed.headers = entry.headers || {};
+  parsed.data = entry.body || null;
 }
 
 if (parsed.count > 1) {

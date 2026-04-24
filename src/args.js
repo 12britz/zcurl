@@ -8,7 +8,9 @@ export function parseArgs(argv) {
     data: null,
     verbose: false,
     replay: false,
+    replayNum: null,
     history: false,
+    historyNum: null,
     queryParams: {},
     count: 1,
     concurrency: 1,
@@ -75,10 +77,16 @@ export function parseArgs(argv) {
 
       case "--replay":
         result.replay = true;
+        if (argv[i + 1] && !argv[i + 1].startsWith("-")) {
+          result.replayNum = parseInt(argv[++i], 10);
+        }
         break;
 
       case "--history":
         result.history = true;
+        if (argv[i + 1] && !argv[i + 1].startsWith("-")) {
+          result.historyNum = parseInt(argv[++i], 10);
+        }
         break;
 
       case "-o":
