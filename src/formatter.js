@@ -4,153 +4,105 @@ const Box = { tl: "┌", tr: "┐", bl: "└", br: "┘", h: "─", v: "│" };
 const C = { p: chalk.cyan, s: chalk.green, w: chalk.white, y: chalk.yellow, r: chalk.red, d: chalk.dim };
 const W = 52;
 
-export function formatRequest(req) {
-  let out = C.d(Box.tl + Box.h.repeat(W) + Box.tr) + "\n";
-  out += line(C.p.bold(" REQUEST ")) + "\n";
-  const methodColored = C.p(String(req.method).padEnd(7));
-  const urlColored = C.w(req.url);
-  out += line(methodColored + " " + urlColored) + "\n";
-  out += C.d(Box.bl + Box.h.repeat(W) + Box.br) + "\n";
+// Build row: compute plain length first, add styled, then close
+function row(plain, styled) {
+  const p = plain || "";
+  const pLen = p.length;
+  const pad = Math.max(0, W - 2 - pLen);
+  return C.d(Box.v) + " " + (styled || C.w(p)) + " ".repeat(pad) + C.d(Box.v);
+}
 
-  const hdrs = req.headers || {};
-  if (Object.keys(hdrs).length > 0) {
-    out += line(C.p.bold(" Headers ")) + "\n";
-    for (const k of Object.keys(hdrs)) {
-      out += line2(k, hdrs[k]);
+export function formatRequest(req) {
+  let o = C.d(Box.tl + Box.h.repeat(W) + Box.tr) + "\n";
+  o += row(" REQUEST ", C.p.bold(" REQUEST ")) + "\n";
+  o += row(req.method + " " + req.url, C.p(req.method) + " " + C.w(req.url)) + "\n";
+  o += C.d(Box.bl + Box.h.repeat(W) + Box.br) + "\n";
+
+  const h = req.headers || {};
+  if (Object.keys(h).length) {
+    o += row(" Headers ", C.p.bold(" Headers ")) + "\n";
+    for (const k of Object.keys(h)) {
+      const kv = k.padEnd(22) + " " + String(h[k]).slice(0, 27);
+      o += row(kv, C.p(k.padEnd(22)) + " " + C.w(String(h[k]).slice(0, 27))) + "\n";
     }
   }
 
   if (req.body) {
-    out += line(C.p.bold(" Body ")) + "\n";
-    const b = formatBody(req.body, hdrs["Content-Type"]);
-    for (const line of b.split("\n").slice(0, 15)) {
-      out += line3(line);
-    }
+    o += row(" Body ", C.p.bold(" Body ")) + "\n";
+    const b = fmtBody(req.body, h["Content-Type"]);
+    for (const ln of b.split("\n").slice(0, 15)) o += row(ln, C.w(ln)) + "\n";
   }
 
-  out += C.d(Box.bl + Box.h.repeat(W) + Box.br) + "\n";
-  return out;
+  o += C.d(Box.bl + Box.h.repeat(W) + Box.br) + "\n";
+  return o;
 }
 
 export function formatResponse(res) {
-  let out = C.d(Box.tl + Box.h.repeat(W) + Box.tr) + "\n";
-  out += line(C.p.bold(" RESPONSE ")) + "\n";
-  const statusColored = statusColor(res.status);
-  out += line(statusColored + " " + res.statusText) + "\n";
-  out += C.d(Box.bl + Box.h.repeat(W) + Box.br) + "\n";
+  let o = C.d(Box.tl + Box.h.repeat(W) + Box.tr) + "\n";
+  o += row(" RESPONSE ", C.p.bold(" RESPONSE ")) + "\n";
+  const sc = res.status < 300 ? C.s : res.status < 400 ? C.y : C.r;
+  o += row(String(res.status) + " " + res.statusText, sc(String(res.status)) + " " + C.w(res.statusText)) + "\n";
+  o += C.d(Box.bl + Box.h.repeat(W) + Box.br) + "\n";
 
-  out += line(C.p.bold(" Headers ")) + "\n";
-  const hdrs = res.headers || {};
-  for (const k of Object.keys(hdrs)) {
-    out += line2(k, hdrs[k]);
+  o += row(" Headers ", C.p.bold(" Headers ")) + "\n";
+  const rh = res.headers || {};
+  for (const k of Object.keys(rh)) {
+    const kv = k.padEnd(22) + " " + String(rh[k]).slice(0, 27);
+    o += row(kv, C.p(k.padEnd(22)) + " " + C.w(String(rh[k]).slice(0, 27))) + "\n";
   }
 
   if (res.body) {
-    out += line(C.p.bold(" Body ")) + "\n";
-    const b = formatBody(res.body, hdrs["content-type"]);
-    for (const line of b.split("\n").slice(0, 15)) {
-      out += line3(line);
-    }
+    o += row(" Body ", C.p.bold(" Body ")) + "\n";
+    const b = fmtBody(res.body, rh["content-type"]);
+    for (const ln of b.split("\n").slice(0, 15)) o += row(ln, C.w(ln)) + "\n";
   }
 
-  out += C.d(Box.bl + Box.h.repeat(W) + Box.br) + "\n";
-  return out;
+  o += C.d(Box.bl + Box.h.repeat(W) + Box.br) + "\n";
+  return o;
 }
 
-export function formatTiming(timing) {
-  if (!timing) return "";
-  let out = "\n" + C.d(Box.tl + Box.h.repeat(W) + Box.tr) + "\n";
-  out += line(C.p.bold(" TIMING ")) + "\n";
-  out += C.d(Box.bl + Box.h.repeat(W) + Box.br) + "\n";
+export function formatTiming(t) {
+  if (!t) return "";
+  let o = "\n" + C.d(Box.tl + Box.h.repeat(W) + Box.tr) + "\n";
+  o += row(" TIMING ", C.p.bold(" TIMING ")) + "\n";
+  o += C.d(Box.bl + Box.h.repeat(W) + Box.br) + "\n";
 
-  const phases = [
-    ["DNS", timing.dns],
-    ["TCP", timing.tcp],
-    ["TLS", timing.tls],
-    ["TTFB", timing.ttfb],
-    ["DL", timing.download],
-    ["Total", timing.total]
-  ];
-  const maxTime = Math.max(...phases.map(([, v]) => v || 0), 0.001);
-  const barWidth = 14;
+  const ph = [["DNS", t.dns], ["TCP", t.tcp], ["TLS", t.tls], ["TTFB", t.ttfb], ["DL", t.download], ["Total", t.total]];
+  const mx = Math.max(...ph.map(([, v]) => v || 0), 0.001);
+  const bw = 14;
 
-  for (const [label, ms] of phases) {
+  for (const [l, ms] of ph) {
     if (!ms) continue;
-    const barLen = Math.max(1, Math.round((ms / maxTime) * barWidth));
-    const bar = "▓".repeat(barLen) + "░".repeat(barWidth - barLen);
-    const color = ms / timing.total > 0.5 ? C.r : ms / timing.total > 0.25 ? C.y : C.s;
-    const content = C.d(label.padEnd(6)) + color(bar) + " " + C.w(ms.toFixed(0) + " ms");
-    out += line(content) + "\n";
+    const bl = Math.max(1, Math.round((ms / mx) * bw));
+    const bar = "▓".repeat(bl) + "░".repeat(bw - bl);
+    const col = ms / t.total > 0.5 ? C.r : ms / t.total > 0.25 ? C.y : C.s;
+    const content = l.padEnd(6) + bar + " " + ms.toFixed(0) + " ms";
+    o += row(content, C.d(l.padEnd(6)) + col(bar) + " " + C.w(ms.toFixed(0) + " ms")) + "\n";
   }
 
-  out += C.d(Box.bl + Box.h.repeat(W) + Box.br) + "\n\n";
-  return out;
+  o += C.d(Box.bl + Box.h.repeat(W) + Box.br) + "\n\n";
+  return o;
 }
 
-function line(content) {
-  const str = String(content);
-  if (str.length >= W - 2) {
-    return C.d(Box.v) + " " + str.slice(0, W - 2) + C.d(Box.v);
-  }
-  const pad = W - 3 - str.length;
-  return C.d(Box.v) + " " + str + " ".repeat(pad) + C.d(Box.v);
+function fmtBody(b, ct) {
+  if (!b) return "(empty)";
+  const j = ct?.includes("json") || b.trim().startsWith("{") || b.trim().startsWith("[");
+  if (j) try { return syntax(JSON.stringify(JSON.parse(b), null, 2)); } catch { return b; }
+  return b.slice(0, 2000);
 }
 
-function line2(key, val) {
-  const k = String(key).slice(0, 20).padEnd(20);
-  const v = String(val).slice(0, 28);
-  const totalLen = k.length + v.length + 1;
-  const pad = Math.max(0, W - 3 - totalLen);
-  return C.d(Box.v) + " " + C.p(k) + " " + C.w(v) + " ".repeat(pad) + C.d(Box.v);
-}
-
-function line3(text) {
-  const t = String(text).slice(0, W - 3);
-  const pad = Math.max(0, W - 3 - t.length);
-  return C.d(Box.v) + " " + C.w(t) + " ".repeat(pad) + C.d(Box.v);
-}
-
-function statusColor(s) {
-  if (s < 200) return C.w;
-  if (s < 300) return C.s;
-  if (s < 400) return C.y;
-  return C.r;
-}
-
-function formatBody(body, ct) {
-  if (!body) return "(empty)";
-  const isJson = ct?.includes("json") || body.trim().startsWith("{") || body.trim().startsWith("[");
-  if (isJson) {
-    try {
-      return syntaxJson(JSON.stringify(JSON.parse(body), null, 2));
-    } catch {
-      return body;
-    }
-  }
-  return body.slice(0, 2000);
-}
-
-function syntaxJson(jsonStr) {
-  return jsonStr.replace(
+function syntax(json) {
+  return json.replace(
     /("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+-]?\d+)?)/g,
-    (match) => {
-      let col = C.w;
-      if (/^"/.test(match)) {
-        if (/:$/.test(match)) {
-          col = C.p;
-          match = match.replace(/:$/, "");
-          return col(match) + C.d(":");
-        } else {
-          col = C.y;
-        }
-      } else if (/true/.test(match)) {
-        col = C.s;
-      } else if (/false/.test(match)) {
-        col = C.r;
-      } else if (/null/.test(match)) {
-        col = C.d;
-      }
-      return col(match);
+    (m) => {
+      let c = C.w;
+      if (/^"/.test(m)) {
+        if (/:$/.test(m)) { c = C.p; m = m.replace(/:$/, ""); return c(m) + C.d(":"); }
+        c = C.y;
+      } else if (/true/.test(m)) c = C.s;
+      else if (/false/.test(m)) c = C.r;
+      else if (/null/.test(m)) c = C.d;
+      return c(m);
     }
   );
 }
