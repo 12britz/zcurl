@@ -10,6 +10,8 @@ export function parseArgs(argv) {
     replay: false,
     history: false,
     queryParams: {},
+    count: 1,
+    concurrency: 1,
   };
 
   let i = 0;
@@ -33,6 +35,18 @@ export function parseArgs(argv) {
             result.headers[key] = val;
           }
         }
+        break;
+
+      case "-n":
+      case "--count":
+        i++;
+        result.count = parseInt(argv[i], 10) || 1;
+        break;
+
+      case "-c":
+      case "--concurrency":
+        i++;
+        result.concurrency = parseInt(argv[i], 10) || 1;
         break;
 
       case "-d":
@@ -160,6 +174,10 @@ export function parseArgs(argv) {
     result.url = urlObj.toString();
   }
 
+  if (result.count === 1 && result.concurrency > 1) {
+    result.count = result.concurrency;
+  }
+
   return result;
 }
 
@@ -181,6 +199,10 @@ HEADERS:
 DATA:
   -d, --data <body>         Request body (sets POST if GET)
   -q, --query <K=V>         Add query parameter
+
+CONCURRENCY:
+  -n, --count <number>      Total number of requests to make
+  -c, --concurrency <num>   Number of concurrent requests
 
 FLAGS:
   -v, --verbose             Show full request and response details

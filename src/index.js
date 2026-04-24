@@ -34,6 +34,49 @@ if (parsed.replay) {
   parsed.data = last.body || null;
 }
 
+if (parsed.count > 1) {
+  const results = [];
+  const concurrency = Math.max(1, parsed.concurrency || 1);
+  const total = parsed.count;
+  const queue = Array.from({ length: total }, (_, i) => i);
+  
+  process.stdout.write(chalk.cyan(`\n🚀 Dispatching ${total} requests (${concurrency} concurrent)...\n`));
+
+  const workers = Array.from({ length: Math.min(concurrency, total) }, async () => {
+    while (queue.length > 0) {
+      const id = queue.shift();
+      try {
+        const res = await makeRequest(parsed);
+        results.push({ id, status: res.response.status, timing: res.timing });
+        process.stdout.write(chalk.green("✔"));
+      } catch (err) {
+        results.push({ id, status: 0, error: err.message });
+        process.stdout.write(chalk.red("✘"));
+      }
+    }
+  });
+
+  await Promise.all(workers);
+  process.stdout.write("\n\n");
+
+  const success = results.filter(r => r.status >= 200 && r.status < 300).length;
+  const failed = total - success;
+  const timings = results.filter(r => r.timing).map(r => r.timing.total);
+  const avgTime = timings.length ? (timings.reduce((a, b) => a + b, 0) / timings.length) : 0;
+  const minTime = timings.length ? Math.min(...timings) : 0;
+  const maxTime = timings.length ? Math.max(...timings) : 0;
+
+  console.log(chalk.bold.cyan("── CONCURRENCY SUMMARY ──"));
+  console.log(`${chalk.white("Total Requests:  ")} ${total}`);
+  console.log(`${chalk.white("Success:         ")} ${chalk.green(success)}`);
+  console.log(`${chalk.white("Failed:          ")} ${chalk.red(failed)}`);
+  console.log(`${chalk.white("Average Time:    ")} ${chalk.yellow(avgTime.toFixed(2) + " ms")}`);
+  console.log(`${chalk.white("Min / Max:       ")} ${chalk.dim(minTime.toFixed(2))} / ${chalk.dim(maxTime.toFixed(2))} ms`);
+  console.log(chalk.bold.cyan("─────────────────────────\n"));
+  
+  process.exit(0);
+}
+
 const { request, response, timing } = await makeRequest(parsed);
 
 computeWidth(request, response);
