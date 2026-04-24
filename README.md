@@ -21,11 +21,14 @@ A beautifully colored curl alternative with stunning box-style output. Make HTTP
 ## Install
 
 ```bash
-# Install globally
-npm install -g zcurl
+# Install globally (scoped package)
+npm install -g @12britz/zcurl
 
 # Or use without installing
-npx zcurl <url>
+npx @12britz/zcurl <url>
+
+# After install, use 'zcurl' command
+zcurl https://httpbin.org/get
 ```
 
 ---
