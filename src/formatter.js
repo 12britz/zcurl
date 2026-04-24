@@ -2,13 +2,37 @@ import chalk from "chalk";
 
 const Box = { tl: "┌", tr: "┐", bl: "└", br: "┘", h: "─", v: "│" };
 const C = { p: chalk.cyan, s: chalk.green, w: chalk.white, y: chalk.yellow, r: chalk.red, d: chalk.dim };
-const W = 52;
+let W = 52;
+
+export function computeWidth(req, res) {
+  const check = (str) => { W = Math.max(W, str.replace(/\x1B\[[0-9;]*[mGK]/g, "").length + 1); };
+  
+  if (req) {
+    check(req.method + " " + req.url);
+    const h = req.headers || {};
+    for (const k of Object.keys(h)) check(k.padEnd(22) + " " + String(h[k]));
+    if (req.body) {
+      const b = fmtBody(req.body, h["Content-Type"]);
+      for (const ln of b.split("\n").slice(0, 15)) check(ln);
+    }
+  }
+  
+  if (res) {
+    check(String(res.status) + " " + res.statusText);
+    const rh = res.headers || {};
+    for (const k of Object.keys(rh)) check(k.padEnd(22) + " " + String(rh[k]));
+    if (res.body) {
+      const b = fmtBody(res.body, rh["content-type"]);
+      for (const ln of b.split("\n").slice(0, 15)) check(ln);
+    }
+  }
+}
 
 // Build row: compute plain length first, add styled, then close
 function row(plain, styled) {
   const p = plain || "";
-  const pLen = p.length;
-  const pad = Math.max(0, W - 2 - pLen);
+  const pLen = p.replace(/\x1B\[[0-9;]*[mGK]/g, "").length;
+  const pad = Math.max(0, W - 1 - pLen);
   return C.d(Box.v) + " " + (styled || C.w(p)) + " ".repeat(pad) + C.d(Box.v);
 }
 
@@ -22,8 +46,8 @@ export function formatRequest(req) {
   if (Object.keys(h).length) {
     o += row(" Headers ", C.p.bold(" Headers ")) + "\n";
     for (const k of Object.keys(h)) {
-      const kv = k.padEnd(22) + " " + String(h[k]).slice(0, 27);
-      o += row(kv, C.p(k.padEnd(22)) + " " + C.w(String(h[k]).slice(0, 27))) + "\n";
+      const kv = k.padEnd(22) + " " + String(h[k]);
+      o += row(kv, C.p(k.padEnd(22)) + " " + C.w(String(h[k]))) + "\n";
     }
   }
 
@@ -47,8 +71,8 @@ export function formatResponse(res) {
   o += row(" Headers ", C.p.bold(" Headers ")) + "\n";
   const rh = res.headers || {};
   for (const k of Object.keys(rh)) {
-    const kv = k.padEnd(22) + " " + String(rh[k]).slice(0, 27);
-    o += row(kv, C.p(k.padEnd(22)) + " " + C.w(String(rh[k]).slice(0, 27))) + "\n";
+    const kv = k.padEnd(22) + " " + String(rh[k]);
+    o += row(kv, C.p(k.padEnd(22)) + " " + C.w(String(rh[k]))) + "\n";
   }
 
   if (res.body) {

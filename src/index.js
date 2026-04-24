@@ -4,7 +4,7 @@ import chalk from "chalk";
 import { parseArgs } from "./args.js";
 import { showBanner } from "./banner.js";
 import { makeRequest } from "./client.js";
-import { formatRequest, formatResponse, formatTiming } from "./formatter.js";
+import { formatRequest, formatResponse, formatTiming, computeWidth } from "./formatter.js";
 import { loadHistory, saveToHistory, showHistory } from "./history.js";
 
 const args = process.argv.slice(2);
@@ -35,6 +35,8 @@ if (parsed.replay) {
 }
 
 const { request, response, timing } = await makeRequest(parsed);
+
+computeWidth(request, response);
 
 console.log(formatRequest(request));
 console.log(formatResponse(response));
