@@ -1,116 +1,202 @@
-# zcurl
+# zcurl 🎨
 
-A beautifully colored curl alternative — see your HTTP requests and responses with style.
+A beautifully colored curl alternative with stunning box-style output. Make HTTP requests that look amazing in your terminal.
 
+<p align="center">
+  <img width="600" alt="zcurl demo" src="https://github.com/user-attachments/assets/b6f63207-03c3-493c-ae24-7c0b1350b75a" />
+</p>
 
-<img width="525" height="330" alt="image" src="https://github.com/user-attachments/assets/b6f63207-03c3-493c-ae24-7c0b1350b75a" />
+---
 
+## Why zcurl?
 
-## Features
+- ✨ **Beautiful output** - Box-style borders with proper closing lines
+- 🎨 **Syntax highlighting** - JSON colors that pop
+- ⏱️ **Timing stats** - See DNS, TCP, TLS, TTFB breakdown
+- 📜 **Request history** - Save and replay past requests
+- 🚀 **Performance testing** - Run concurrent requests
 
-- Colored output for requests and responses
-- JSON syntax highlighting
-- Timing stats (DNS, TCP, TTFB, total)
-- Request history and replay
-- Headers, auth, and data support
-- Follow redirects, timeout, and more
+---
 
 ## Install
 
 ```bash
+# Install globally
 npm install -g zcurl
-```
 
-Or use locally without installing:
-
-```bash
+# Or use without installing
 npx zcurl <url>
 ```
 
-## Usage
+---
+
+## Quick Start
 
 ```bash
-# Basic GET
-zcurl https://api.example.com
+# Basic GET request
+zcurl https://httpbin.org/get
 
 # POST with JSON body
-zcurl -X POST https://api.example.com/data -d '{"name":"test"}'
-
-# With custom headers
-zcurl -H "Authorization: Bearer token" -H "X-API-Key: key" https://api.example.com
-
-# Query parameters
-zcurl https://api.example.com -q page=1 -q limit=10
-
-# Basic auth or Bearer token
-zcurl --auth user:pass https://api.example.com
-zcurl --auth your-token https://api.example.com
+zcurl -X POST https://httpbin.org/post -d '{"name":"test","value":123}'
 ```
 
-## Options
+---
 
-| Flag | Description |
-|-----|-------------|
-| `-X, --method` | HTTP method (GET, POST, PUT, DELETE, etc.) |
-| `-H, --header` | Custom header (key:value) |
-| `-d, --data` | Request body |
-| `-q, --query` | Query parameter (key=value) |
-| `-j, --json` | Force JSON content-type |
-| `-f, --form` | Force form-urlencoded |
-| `-L, --location` | Follow redirects |
-| `-k, --insecure` | Skip TLS verification |
-| `--timeout` | Timeout in ms |
-| `--auth` | Basic auth (user:pass) or Bearer token |
-| `--replay` | Replay last request |
-| `--history` | Show request history |
-| `-o, --output` | Save response to file |
+## Features
+
+### 📝 Request Builder
+| Flag | Description | Example |
+|------|-------------|---------|
+| `-X, --method` | HTTP method | `zcurl -X POST <url>` |
+| `-H, --header` | Custom header | `zcurl -H "Authorization: Bearer token" <url>` |
+| `-d, --data` | Request body | `zcurl -d '{"key":"value"}' <url>` |
+| `-q, --query` | Query parameter | `zcurl -q page=1 -q limit=10 <url>` |
+| `--auth` | Auth header | `zcurl --auth user:pass <url>` or `zcurl --auth token` |
+
+### 🎯 Output Options
+| Flag | Description | Example |
+|------|-------------|---------|
+| `-j, --json` | Force JSON | `zcurl -j <url>` |
+| `-f, --form` | Form data | `zcurl -f <url>` |
+| `-o, --output` | Save to file | `zcurl -o response.json <url>` |
+| `--download` | Download file | `zcurl --download <url>` |
+
+### 🔒 Security
+| Flag | Description | Example |
+|------|-------------|---------|
+| `-k, --insecure` | Skip TLS verify | `zcurl -k <url>` |
+| `-L, --location` | Follow redirects | `zcurl -L <url>` |
+| `--timeout` | Request timeout | `zcurl --timeout 5000 <url>` |
+
+### ⏱️ Performance
+| Flag | Description | Example |
+|------|-------------|---------|
+| `-n, --count` | Total requests | `zcurl -n 100 <url>` |
+| `-c, --concurrency` | Concurrent | `zcurl -c 10 <url>` |
+
+### 📚 History
+| Flag | Description | Example |
+|------|-------------|---------|
+| `--history` | View all history | `zcurl --history` |
+| `--history #` | See entry #N | `zcurl --history 1` |
+| `--replay` | Replay last | `zcurl --replay` |
+| `--replay #` | Replay #N | `zcurl --replay 3` |
+
+---
 
 ## Examples
 
+### Basic GET
 ```bash
-# GET request
 zcurl https://httpbin.org/get
+```
 
-# POST with JSON
+### POST with JSON
+```bash
 zcurl -X POST https://httpbin.org/post \
   -d '{"username":"admin","password":"secret"}' \
   -H "Content-Type: application/json"
-
-# Delete request
-zcurl -X DELETE https://api.example.com/item/123
-
-# Download file
-zcurl -o file.zip https://example.com/file.zip
 ```
 
-## Demo
+### Custom Headers
+```bash
+zcurl -H "Authorization: Bearer sk-12345" \
+  -H "X-API-Version: v2" \
+  https://api.example.com
+```
+
+### Query Parameters
+```bash
+zcurl https://api.example.com/users \
+  -q page=1 \
+  -q limit=50 \
+  -q sort=name
+```
+
+### Basic Auth
+```bash
+zcurl --auth admin:secret https://api.example.com
+```
+
+### Bearer Token
+```bash
+zcurl --auth eyJhbGciOiJIUzI1NiIs... https://api.example.com
+```
+
+### Save Response
+```bash
+zcurl -o response.json https://api.example.com/data
+```
+
+### Performance Testing
+```bash
+# 100 requests, 10 concurrent
+zcurl -n 100 -c 10 https://api.example.com/ping
+```
+
+### View History
+```bash
+# List all requests
+zcurl --history
+
+# See entry #1 details (headers, body)
+zcurl --history 1
+```
+
+### Replay Request
+```bash
+# Replay the last request
+zcurl --replay
+
+# Replay entry #2
+zcurl --replay 2
+
+# Replay with modifications
+zcurl --replay -X PUT -d '{"updated":"data"}'
+```
+
+---
+
+## Demo Output
 
 ```
-  ────────────────────── ▼ RESPONSE ▼ ──────────────────────
-  ❯ 200  OK
+┌───────────────────────────────────────────────────────────────────┐
+│  REQUEST                                                          │
+│ GET https://httpbin.org/get                                    │
+└───────────────────────────────────────────────────────────────────┘
 
-  ── Headers ──
-  content-type             application/json
-  server                   nginx
+┌───────────────────────────────────────────────────────────────────┐
+│  RESPONSE                                                         │
+│ 200 OK                                                            │
+└───────────────────────────────────────────────────────────────────┘
+│  Headers                                                         │
+│ access-control-allow-credentials true                             │
+│ access-control-allow-origin *                                    │
+│ content-type           application/json                          │
+├───────────────────────────────────────────────────────────────────┤
+│  Body                                                            │
+│ {                                                                │
+│   "args": {},                                                    │
+│   "headers": {                                                   │
+│     "Accept": "*/*",                                             │
+│     "Host": "httpbin.org"                                        │
+│   },                                                            │
+│   "origin": "122.172.80.151",                                    │
+│   "url": "https://httpbin.org/get"                                │
+│ }                                                                │
+└───────────────────────────────────────────────────────────────────┘
 
-  ── Body ──
-  {
-    "args": {},
-    "data": "...",
-    "json": {
-      "name": "test",
-      "value": 123
-    }
-  }
-
-  Size: 489 B
-
-  ─────────────────────── ⏱ TIMING ⏱ ───────────────────────
-  DNS Lookup             ████ 164 ms
-  TCP Connect            █████████ 409 ms
-  First Byte (TTFB)      ████████████████████ 1365 ms
-  Total                  ██████████████████████████ 1369 ms
+┌───────────────────────────────────────────────────────────────────┐
+│  TIMING                                                          │
+│ DNS   ▓▓░░░░░░░░░░░░ 143 ms                                     │
+│ TCP   ▓▓▓▓░░░░░░░░░░ 357 ms                                     │
+│ TLS   ▓░░░░░░░░░░░░░ 107 ms                                     │
+│ TTFB  ▓▓▓▓▓▓▓▓▓▓▓▓▓▓ 1189 ms                                    │
+│ Total ▓▓▓▓▓▓▓▓▓▓▓▓▓▓ 1190 ms                                    │
+└───────────────────────────────────────────────────────────────────┘
 ```
+
+---
 
 ## License
 
